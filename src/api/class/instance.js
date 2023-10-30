@@ -278,6 +278,7 @@ class WhatsAppInstance {
 
                 const webhookData = {
                     key: this.key,
+                    messageType: messageType,
                     ...msg,
                 }
 
