@@ -89,7 +89,10 @@ class WhatsAppInstance {
         sock?.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update
 
-            if (connection === 'connecting') return
+            if (connection === 'connecting') {
+                Io.emit(this.key, "connection", "connecting");
+                return;
+            }
 
             if (connection === 'close') {
                 // reconnect if not logged out
@@ -97,12 +100,14 @@ class WhatsAppInstance {
                     lastDisconnect?.error?.output?.statusCode !==
                     DisconnectReason.loggedOut
                 ) {
+                    Io.emit(this.key, "connection", "reconnect");
                     await this.init()
                 } else {
                     await this.collection.drop().then((r) => {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
+                    Io.emit(this.key, "connection", "close");
                 }
 
                 if (
@@ -131,6 +136,8 @@ class WhatsAppInstance {
                     }
                 }
                 this.instance.online = true
+                Io.emit(this.key, "connection", "open");
+
                 if (
                     [
                         'all',
@@ -138,7 +145,9 @@ class WhatsAppInstance {
                         'connection.update',
                         'connection:open',
                     ].some((e) => config.webhookAllowedEvents.includes(e))
-                )
+                ) {
+                    Io.emit(this.key, "connection", connection);
+
                     await this.SendWebhook(
                         'connection',
                         {
@@ -146,9 +155,12 @@ class WhatsAppInstance {
                         },
                         this.key
                     )
+                }
             }
 
             if (qr) {
+                Io.emit(this.key, "qr", this.key);
+
                 QRCode.toDataURL(qr).then((url) => {
                     this.instance.qr = url
                     this.instance.qrRetry++
@@ -158,6 +170,7 @@ class WhatsAppInstance {
                         // remove all events
                         this.instance.sock.ev.removeAllListeners()
                         this.instance.qr = ' '
+                        Io.emit(this.key, "qr", null);
                         logger.info('socket connection terminated')
                     }
                 })

@@ -9,7 +9,12 @@ const config = require('./config/config')
 const { Session } = require('./api/class/session')
 const connectToCluster = require('./api/helper/connectMongoClient')
 
+const http = require("http");
+const { IO } = require('./api/class/socketio')
+
 let server
+const appServer = http.createServer(app);
+global.Io = IO(appServer);
 
 if (config.mongoose.enabled) {
     mongoose.set('strictQuery', true);
@@ -18,7 +23,7 @@ if (config.mongoose.enabled) {
     })
 }
 
-server = app.listen(config.port, async () => {
+server = appServer.listen(config.port, async () => {
     logger.info(`Listening on port ${config.port}`)
     global.mongoClient = await connectToCluster(config.mongoose.url)
     if (config.restoreSessionsOnStartup) {
