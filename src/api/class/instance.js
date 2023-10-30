@@ -152,6 +152,7 @@ class WhatsAppInstance {
                         'connection',
                         {
                             connection: connection,
+                            info: await this.getInstanceDetail(this.key)
                         },
                         this.key
                     )
