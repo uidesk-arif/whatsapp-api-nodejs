@@ -460,6 +460,7 @@ class WhatsAppInstance {
     }
 
     async sendTextMessage(to, message) {
+        to = String(to);
         await this.verifyId(this.getWhatsAppId(to))
         const data = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
